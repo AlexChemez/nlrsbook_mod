@@ -72,6 +72,12 @@ function checkToken($user_id, $host) {
     return $json['data']['eduCheckIfLinkedNlrsAccountExistsAndGetToken']['token'];
 }
 
+function extractPayloadFromToken($token) {
+    $tokenParts = explode(".", $token);
+    $tokenPayload = base64_decode($tokenParts[1]);
+    return json_decode($tokenPayload, true);
+}
+
 function getShelf($nlrsbook_id, $token) 
 {
     $query = '{ 
@@ -244,10 +250,15 @@ if ($bookdata['shortBibl']) {
     $shortBibl = null;
 }
 
+
+$seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
+$seamlessAuthSignature = 'y3Mz2ahGpv7GMLGttHZ7PBTsfDaHtmPX'; // временная заглушка
+$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
+
 $template = '<div class="row">
 <div class="col-sm-2 mb-4">
 <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
-<a class="mt-3 btn btn-primary btn-block" href="https://e.nlrs.ru/online2/'.$nlrsbook_id.'" target="_blank">Читать</a>
+<a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
 </div>
 <div class="col-sm-10">
     '.$title.''.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
