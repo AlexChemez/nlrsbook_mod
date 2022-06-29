@@ -10,7 +10,6 @@ $id = optional_param('id', 0, PARAM_INT);
 $i = optional_param('i', 0, PARAM_INT);
 
 
-
 if ($id) {
     $cm = get_coursemodule_from_id('nlrsbook', $id, 0, false, MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -29,7 +28,8 @@ $host = 'https://e.nlrs.ru/graphql';
 $user_id = $USER->id;
 // $instance = $DB->get_record('nlrsbook_shelf', array('user_id' => $USER->id), '*', IGNORE_MISSING );
 
-// $nlrsbook_id = $moduleinstance->nlrsbook_id;
+$nlrsbook_id = $moduleinstance->nlrsbook_id;
+
 
 // if ($instance->token) {
 //     $token = $instance->token;
@@ -253,8 +253,11 @@ if ($bookdata['shortBibl']) {
 }
 
 
-$seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
-$seamlessAuthSignature = 'y3Mz2ahGpv7GMLGttHZ7PBTsfDaHtmPX'; // временная заглушка
+// $seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
+$seamlessAuthUserId = 48059; // TODO: получать из токена
+$seamlessAuthSignature = 'y3Mz2ahGpv7GMLGttHZ7PBTsfDaHtmPX'; // TODO: реализовать генерацию подписи, пока стоит временная заглушка
+
+
 $bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
 
 $template = '
