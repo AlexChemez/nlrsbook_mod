@@ -8,10 +8,39 @@ class mod_nlrsbook_mod_form extends moodleform_mod {
 
     function definition() {
         global $CFG, $PAGE, $DB, $USER;
-
         $mform = $this->_form;
 
-        $PAGE->requires->js_call_amd('nlrsbook/modal_search_handle', 'init');
+        // 'ecsbEpsEfed_': 'https://new.nlrs.ru/ecsb-example/dist/script'
+        // 'ecsbEpsEfed_': 'http://127.0.0.1:8000/dist/script'
+        $requirejs = "require.config(
+            {
+                paths: {
+                    'ecsbEpsEfed_': 'https://new.nlrs.ru/ecsb-example/dist/script'
+                },
+                shim: {
+                    'ecsbEpsEfed_': {exports: 'ecsbEpsEfed'}
+                },
+                attributes: {
+                    'data-id': 'ecsb-eps-efed-script',
+                    'data-mode': 'edu_select_to_attach',
+                    'data-partner-id': '1',
+                    'data-eps-search-results-url': '/search',
+                    'data-efed-viewer-url': '/open',
+                    'data-efed-viewer-url-book-id-placement': 'path',
+                    'data-ui-primary-color': '#0f6cbf'
+                },
+                onNodeCreated: function(node, config, name, url){
+                    if(config.attributes){
+                      Object.keys(config.attributes).forEach(attribute => {
+                        node.setAttribute(attribute, config.attributes[attribute]);
+                      });
+                    }
+                  }
+            }
+        )";
+        $PAGE->requires->js_amd_inline($requirejs);
+
+        $PAGE->requires->js_call_amd('mod_nlrsbook/modal_search_handle', 'init');
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 

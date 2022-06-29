@@ -27,21 +27,22 @@ require_login($course, true, $cm);
 
 $host = 'https://e.nlrs.ru/graphql';
 $user_id = $USER->id;
-$instance = $DB->get_record('nlrsbook_shelf', array('user_id' => $USER->id), '*', IGNORE_MISSING );
+// $instance = $DB->get_record('nlrsbook_shelf', array('user_id' => $USER->id), '*', IGNORE_MISSING );
 
-$nlrsbook_id = $moduleinstance->nlrsbook_id;
+// $nlrsbook_id = $moduleinstance->nlrsbook_id;
 
-if ($instance->token) {
-    $token = $instance->token;
-} else {
-    $getToken = checkToken($user_id, $host);
-    $row = new stdClass();
-    $row->user_id = $user_id;
-    $row->token = $getToken;
-    $row->datetime = '1';
-    $DB->insert_record('nlrsbook_shelf', $row);
-    $token = $getToken;
-}
+// if ($instance->token) {
+//     $token = $instance->token;
+// } else {
+//     $getToken = checkToken($user_id, $host);
+//     $row = new stdClass();
+//     $row->user_id = $user_id;
+//     $row->token = $getToken;
+//     $row->datetime = '1';
+//     $DB->insert_record('nlrsbook_shelf', $row);
+//     $token = $getToken;
+// }
+$token = 'asdasd';
 
 function checkToken($user_id, $host) {
     $query = 'mutation {
