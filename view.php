@@ -214,6 +214,7 @@ $PAGE->set_url('/mod/nlrsbook/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($modulecontext);
+$PAGE->set_pagelayout('standard');
 
 if ($bookdata['title']) { 
     $title = '<h4 class="mb-3">' . $bookdata['title'] . '</h4>';
@@ -256,13 +257,16 @@ $seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
 $seamlessAuthSignature = 'y3Mz2ahGpv7GMLGttHZ7PBTsfDaHtmPX'; // временная заглушка
 $bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
 
-$template = '<div class="row">
+$template = '
+<div class="main-inner">
+<div class="row">
 <div class="col-sm-2 mb-4">
 <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
 <a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
 </div>
 <div class="col-sm-10">
     '.$title.''.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
+</div>
 </div>
 </div>';
 

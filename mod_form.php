@@ -44,11 +44,11 @@ class mod_nlrsbook_mod_form extends moodleform_mod {
 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        $mform->addElement('text', 'nlrsbook_id', 'nlrsbook_id');
+        $mform->addElement('text', 'nlrsbook_id', 'ID');
         $mform->setType('nlrsbook_id', PARAM_TEXT);
         $mform->addRule('nlrsbook_id', null, 'required', null, 'client');
 
-        $mform->addElement('text', 'name', 'name');
+        $mform->addElement('text', 'name', 'Заглавие');
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', null, 'required', null, 'client');
 
