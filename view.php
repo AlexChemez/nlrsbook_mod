@@ -6,6 +6,10 @@ require_once(__DIR__ . '/lib.php');
 global $CFG;
 global $DB;
 
+require_once($CFG->dirroot . "/blocks/nlrsbook_auth/Query.php");
+
+use App\Querys\Query;
+
 $id = optional_param('id', 0, PARAM_INT);
 $i = optional_param('i', 0, PARAM_INT);
 
@@ -44,11 +48,13 @@ $nlrsbook_id = $moduleinstance->nlrsbook_id;
 // }
 $token = 'asdasd';
 
+$seamlessAuthOrgId = 1;
+
 function checkToken($user_id, $host) {
     $query = 'mutation {
       eduCheckIfLinkedNlrsAccountExistsAndGetToken(
         input: { 
-            orgId: 1, 
+            orgId: "'.$seamlessAuthOrgId.'"
             userIdInEduPlatform: "'.$user_id.'" 
         }
       ) {
@@ -255,10 +261,15 @@ if ($bookdata['shortBibl']) {
 
 // $seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
 $seamlessAuthUserId = 48059; // TODO: получать из токена
-$seamlessAuthSignature = 'y3Mz2ahGpv7GMLGttHZ7PBTsfDaHtmPX'; // TODO: реализовать генерацию подписи, пока стоит временная заглушка
 
+$secret = get_config('nlrsbook_auth', 'org_private_key'); // Секретный ключ организации
 
-$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
+$seamlessAuthSignature = Query::generateServerApiRequestSignature([
+    'seamlessAuthOrgId' => $seamlessAuthOrgId,
+    'seamlessAuthUserId' => $seamlessAuthUserId,
+], $secret);
+
+$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthOrgId=$seamlessAuthOrgId&seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
 
 $template = '
 <div class="main-inner">
