@@ -13,7 +13,6 @@ use App\Querys\Query;
 $id = optional_param('id', 0, PARAM_INT);
 $i = optional_param('i', 0, PARAM_INT);
 
-
 if ($id) {
     $cm = get_coursemodule_from_id('nlrsbook', $id, 0, false, MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -28,205 +27,35 @@ if ($id) {
 
 require_login($course, true, $cm);
 
-$host = 'https://e.nlrs.ru/graphql';
-$user_id = $USER->id;
-// $instance = $DB->get_record('nlrsbook_shelf', array('user_id' => $USER->id), '*', IGNORE_MISSING );
-
 $nlrsbook_id = $moduleinstance->nlrsbook_id;
 
+$seamlessAuthUserId = $USER->id; // Идентицикатор пользователя
+$seamlessAuthOrgId = 1; // Идентификатор организации
 
-// if ($instance->token) {
-//     $token = $instance->token;
-// } else {
-//     $getToken = checkToken($user_id, $host);
-//     $row = new stdClass();
-//     $row->user_id = $user_id;
-//     $row->token = $getToken;
-//     $row->datetime = '1';
-//     $DB->insert_record('nlrsbook_shelf', $row);
-//     $token = $getToken;
-// }
-$token = 'asdasd';
+$secret = get_config('nlrsbook_auth', 'org_private_key'); // Секретный ключ организации
+$seamlessAuthSignature = Query::generateServerApiRequestSignature([
+    'orgId' => $seamlessAuthOrgId,
+    'userIdInEduPlatform' => $seamlessAuthUserId,
+], $secret);
 
-$seamlessAuthOrgId = 1;
+$getToken = Query::getToken($seamlessAuthUserId, $seamlessAuthSignature); // получение токена пользователя
+$nlrsUserId = Query::getSub($USER->id); // TODO: получать из токена
 
-function checkToken($user_id, $host) {
-    $query = 'mutation {
-      eduCheckIfLinkedNlrsAccountExistsAndGetToken(
-        input: { 
-            orgId: "'.$seamlessAuthOrgId.'"
-            userIdInEduPlatform: "'.$user_id.'" 
-        }
-      ) {
-        token
-      }
-    }';
+$seamlessAuthSignatureBase64 = Query::generateServerApiRequestSignatureBase64([
+    "orgId" => $seamlessAuthOrgId,
+    "userIdInEduPlatform" => $nlrsUserId,
+], $secret);
 
-    $data = array ('query' => $query);
-    $data = http_build_query($data);
-
-    $options = array(
-      'http' => array(
-        'method'  => 'POST',  
-        'content' => $data
-      )
-    );
-
-    $context  = stream_context_create($options);
-    $getContents = file_get_contents(sprintf($host), false, $context);
-    $json = json_decode($getContents, true);
-    if ($getContents === FALSE) { }
-    return $json['data']['eduCheckIfLinkedNlrsAccountExistsAndGetToken']['token'];
-}
-
-function extractPayloadFromToken($token) {
-    $tokenParts = explode(".", $token);
-    $tokenPayload = base64_decode($tokenParts[1]);
-    return json_decode($tokenPayload, true);
-}
-
-function getShelf($nlrsbook_id, $token) 
-{
-    $query = '{ 
-        book(id: '.$nlrsbook_id.') {
-          id
-          isOnShelf
-          access
-          coverThumbImage {
-            url
-            width
-            height
-          }
-          title
-          authors {
-            id
-            fullName
-          }
-          annotation
-          shortBibl
-          innerPagesCount
-          releaseDate
-          serialN
-          editionN
-          reprintInfo
-          seriesName
-          num
-          multimediatype {
-            id
-            title
-          }
-          doctype {
-            id
-            title
-          }
-          videotype
-          multimediatypeTitle
-          doctypeTitle
-          scitypeTitle
-          genreTitle
-          langsTitles
-          keywordsPub
-          annotationParallel
-          bibliographyNotes
-          resumeReferat
-          userNote
-          toc
-          udk
-          bbk
-          grnti
-          isbn
-          issn
-          eissn
-          doi
-          pubPlace
-          publisher
-          pubDate
-      }
-    }';
-
-    $data = array ('query' => $query);
-    $data = http_build_query($data);
-
-    $options = array(
-      'http' => array(
-        'header'  => sprintf("Authorization: Bearer %s", $token),
-        'method'  => 'POST',  
-        'content' => $data
-      )
-    );
-
-    $context  = stream_context_create($options);
-    $getContents = file_get_contents(sprintf('https://e.nlrs.ru/graphql'), false, $context);
-    $json = json_decode($getContents, true);
-    if ($getContents === FALSE) { /* Handle error */ }
-    return $json['data']['book'];
-}
-
-function addBookToShelf($book_id, $token) {
-    $query = 'mutation {
-      addBookToShelf(bookId: '.$book_id.') {
-        title
-        is_on_shelf
-      }
-    }';
-
-    $data = array ('query' => $query);
-    $data = http_build_query($data);
-
-    $options = array(
-      'http' => array(
-        'header'  => sprintf("Authorization: Bearer %s", $token),
-        'method'  => 'POST',  
-        'content' => $data
-      )
-    );
-
-    $context  = stream_context_create($options);
-    $getContents = file_get_contents(sprintf('https://e.nlrs.ru/graphql'), false, $context);
-    $json = json_decode($getContents, true);
-    if ($getContents === FALSE) { }
-    return $json;
-}
-
-function removeBookToShelf($book_id, $token) {
-    $query = 'mutation {
-      removeBookFromShelf(bookId: '.$book_id.') {
-        title
-        is_on_shelf
-      }
-    }';
-
-    $data = array ('query' => $query);
-    $data = http_build_query($data);
-
-    $options = array(
-      'http' => array(
-        'header'  => sprintf("Authorization: Bearer %s", $token),
-        'method'  => 'POST',  
-        'content' => $data
-      )
-    );
-
-    $context  = stream_context_create($options);
-    $getContents = file_get_contents(sprintf('https://e.nlrs.ru/graphql'), false, $context);
-    $json = json_decode($getContents, true);
-    if ($getContents === FALSE) { }
-    return $json;
-};
+$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthOrgId=${seamlessAuthOrgId}&seamlessAuthUserId=${nlrsUserId}&seamlessAuthSignature=${seamlessAuthSignatureBase64}&override_redirect=online2/${nlrsbook_id}";
 
 $modulecontext = context_module::instance($cm->id);
-$bookdata = getShelf($nlrsbook_id, $token);
+$bookdata = Query::getBook($nlrsbook_id, $getToken);
 $PAGE->set_url('/mod/nlrsbook/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($modulecontext);
 $PAGE->set_pagelayout('standard');
 
-if ($bookdata['title']) { 
-    $title = '<h4 class="mb-3">' . $bookdata['title'] . '</h4>';
-} else {
-    $title = null;
-}
 if ($bookdata['pubPlace']) { 
     $pubPlace = '<p><b>Место издания:</b> ' . $bookdata['pubPlace'] . '</p>';
 } else {
@@ -257,32 +86,23 @@ if ($bookdata['shortBibl']) {
 } else {
     $shortBibl = null;
 }
-
-
-// $seamlessAuthUserId = extractPayloadFromToken($token)['sub'];
-$seamlessAuthUserId = 48059; // TODO: получать из токена
-
-$secret = get_config('nlrsbook_auth', 'org_private_key'); // Секретный ключ организации
-
-$seamlessAuthSignature = Query::generateServerApiRequestSignature([
-    'seamlessAuthOrgId' => $seamlessAuthOrgId,
-    'seamlessAuthUserId' => $seamlessAuthUserId,
-], $secret);
-
-$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthOrgId=$seamlessAuthOrgId&seamlessAuthUserId=$seamlessAuthUserId&seamlessAuthSignature=$seamlessAuthSignature&override_redirect=online2/$nlrsbook_id";
+$js = file_get_contents($CFG->dirroot . "/mod/nlrsbook/js/nlrsbook_shelf.js");
 
 $template = '
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <div class="main-inner">
 <div class="row">
-<div class="col-sm-2 mb-4">
+<div class="col-sm-3 mb-4">
 <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
 <a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
+<a class="mt-2 btn btn-primary btn-block" id="shelf" data-id="'.$nlrsbook_id.'"></a>
 </div>
-<div class="col-sm-10">
-    '.$title.''.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
+<div class="col-sm-9">
+    '.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
 </div>
+</div
 </div>
-</div>';
+<script type="text/javascript">'.$js.'</script>';
 
 echo $OUTPUT->header();
 
