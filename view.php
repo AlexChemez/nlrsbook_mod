@@ -29,27 +29,10 @@ require_login($course, true, $cm);
 
 $nlrsbook_id = $moduleinstance->nlrsbook_id;
 
-$seamlessAuthUserId = $USER->id; // Идентицикатор пользователя
-$seamlessAuthOrgId = 1; // Идентификатор организации
-
-$secret = get_config('nlrsbook_auth', 'org_private_key'); // Секретный ключ организации
-$seamlessAuthSignature = Query::generateServerApiRequestSignature([
-    'orgId' => $seamlessAuthOrgId,
-    'userIdInEduPlatform' => $seamlessAuthUserId,
-], $secret);
-
-$getToken = Query::getToken($seamlessAuthUserId, $seamlessAuthSignature); // получение токена пользователя
-$nlrsUserId = Query::getSub($USER->id); // TODO: получать из токена
-
-$seamlessAuthSignatureBase64 = Query::generateServerApiRequestSignatureBase64([
-    "orgId" => $seamlessAuthOrgId,
-    "userIdInEduPlatform" => $nlrsUserId,
-], $secret);
-
-$bookUrl = "https://e.nlrs.ru/seamless-auth-redirect?seamlessAuthOrgId=${seamlessAuthOrgId}&seamlessAuthUserId=${nlrsUserId}&seamlessAuthSignature=${seamlessAuthSignatureBase64}&override_redirect=online2/${nlrsbook_id}";
+$bookUrl = Query::getUrl("online2/${nlrsbook_id}");
 
 $modulecontext = context_module::instance($cm->id);
-$bookdata = Query::getBook($nlrsbook_id, $getToken);
+$bookdata = Query::getBook($nlrsbook_id);
 $PAGE->set_url('/mod/nlrsbook/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
@@ -91,16 +74,16 @@ $js = file_get_contents($CFG->dirroot . "/mod/nlrsbook/js/nlrsbook_shelf.js");
 $template = '
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <div class="main-inner">
-<div class="row">
-<div class="col-sm-3 mb-4">
-<img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
-<a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
-<a class="mt-2 btn btn-primary btn-block" id="shelf" data-id="'.$nlrsbook_id.'"></a>
-</div>
-<div class="col-sm-9">
-    '.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
-</div>
-</div
+    <div class="row">
+        <div class="col-sm-3 mb-4">
+            <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
+            <a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
+            <a class="mt-2 btn btn-primary btn-block" id="shelf" data-id="'.$nlrsbook_id.'"></a>
+        </div>
+        <div class="col-sm-9">
+            '.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
+        </div>
+    </div>
 </div>
 <script type="text/javascript">'.$js.'</script>';
 
