@@ -38,60 +38,66 @@ $PAGE->set_context($modulecontext);
 $PAGE->set_pagelayout('standard');
 
 $setting = get_config('nlrsbook_auth', 'org_private_key'); // Секретный ключ организации
-
+$auth_msg = file_get_contents($CFG->dirroot . "/blocks/nlrsbook_auth/message/auth.php");
+$setting_msg = file_get_contents($CFG->dirroot . "/blocks/nlrsbook_auth/message/setting.php");
+        
 if ($setting) {
-    $bookUrl = Query::getUrl("online2/${nlrsbook_id}");
-    $bookdata = Query::getBook($nlrsbook_id);
+    if (Query::getToken()) {
+        $bookUrl = Query::getUrl("online2/${nlrsbook_id}");
+        $bookdata = Query::getBook($nlrsbook_id);
 
-    if ($bookdata['pubPlace']) { 
-        $pubPlace = '<p><b>Место издания:</b> ' . $bookdata['pubPlace'] . '</p>';
-    } else {
-        $pubPlace = null;
-    }
-    if ($bookdata['publisher']) { 
-        $publisher = '<p><b>Издательство:</b> ' . $bookdata['publisher'] . '</p>';
-    } else {
-        $publisher = null;
-    }
-    if ($bookdata['pubDate']) { 
-        $pubDate = '<p><b>Год:</b> ' . $bookdata['pubDate'] . '</p>';
-    } else {
-        $pubDate = null;
-    }
-    if ($bookdata['innerPagesCount']) { 
-        $innerPagesCount = '<p><b>Количество страниц:</b> ' . $bookdata['innerPagesCount'] . '</p>';
-    } else {
-        $innerPagesCount = null;
-    }
-    if ($bookdata['annotation']) { 
-        $annotation = '<p><b>Аннотация:</b></p><p>' . $bookdata['annotation'] . '</p>';
-    } else {
-        $annotation = null;
-    }
-    if ($bookdata['shortBibl']) { 
-        $shortBibl = '<p><b>Библиографическая запись:</b></p><p>' . $bookdata['shortBibl'] . '</p>';
-    } else {
-        $shortBibl = null;
-    }
-    $js = file_get_contents($CFG->dirroot . "/mod/nlrsbook/js/nlrsbook_shelf.js");
+        if ($bookdata['pubPlace']) { 
+            $pubPlace = '<p><b>Место издания:</b> ' . $bookdata['pubPlace'] . '</p>';
+        } else {
+            $pubPlace = null;
+        }
+        if ($bookdata['publisher']) { 
+            $publisher = '<p><b>Издательство:</b> ' . $bookdata['publisher'] . '</p>';
+        } else {
+            $publisher = null;
+        }
+        if ($bookdata['pubDate']) { 
+            $pubDate = '<p><b>Год:</b> ' . $bookdata['pubDate'] . '</p>';
+        } else {
+            $pubDate = null;
+        }
+        if ($bookdata['innerPagesCount']) { 
+            $innerPagesCount = '<p><b>Количество страниц:</b> ' . $bookdata['innerPagesCount'] . '</p>';
+        } else {
+            $innerPagesCount = null;
+        }
+        if ($bookdata['annotation']) { 
+            $annotation = '<p><b>Аннотация:</b></p><p>' . $bookdata['annotation'] . '</p>';
+        } else {
+            $annotation = null;
+        }
+        if ($bookdata['shortBibl']) { 
+            $shortBibl = '<p><b>Библиографическая запись:</b></p><p>' . $bookdata['shortBibl'] . '</p>';
+        } else {
+            $shortBibl = null;
+        }
+        $js = file_get_contents($CFG->dirroot . "/mod/nlrsbook/js/nlrsbook_shelf.js");
 
-    $template = '
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <div class="main-inner">
-        <div class="row">
-            <div class="col-sm-2 mb-4">
-                <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
-                <a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
-                <a class="mt-2 btn btn-primary btn-block" id="shelf" data-id="'.$nlrsbook_id.'"></a>
-            </div>
-            <div class="col-sm-10">
-                '.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
+        $template = '
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <div class="main-inner">
+            <div class="row">
+                <div class="col-sm-2 mb-4">
+                    <img class="rounded shadow" src="' . $bookdata['coverThumbImage']['url'] . '" width="100%">
+                    <a class="mt-3 btn btn-primary btn-block" href="'.$bookUrl.'" target="_blank">Читать</a>
+                    <a class="mt-2 btn btn-primary btn-block" id="shelf" data-id="'.$nlrsbook_id.'"></a>
+                </div>
+                <div class="col-sm-10">
+                    '.$pubPlace.''.$publisher.''.$pubDate.''.$innerPagesCount.''.$annotation.''.$shortBibl.' 
+                </div>
             </div>
         </div>
-    </div>
-    <script type="text/javascript">'.$js.'</script>';
+        <script type="text/javascript">'.$js.'</script>';
+    } else {
+        $template = $auth_msg;
+    }
 } else {
-    $template = '<div class="alert alert-warning">Плагин не настроен. Обратитесь к администратору образовательного учреждения.</div>';
+    $template = $setting_msg;
 }
 
 echo $OUTPUT->header();
