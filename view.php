@@ -79,6 +79,7 @@ if ($setting) {
         $js = file_get_contents($CFG->dirroot . "/mod/nlrsbook/js/nlrsbook_shelf.js");
 
         $template = '
+        </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <div class="main-inner">
             <div class="row">

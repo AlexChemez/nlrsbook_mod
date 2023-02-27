@@ -25,7 +25,7 @@ class mod_nlrsbook_mod_form extends moodleform_mod {
                     'data-mode': 'edu_select_to_attach',
                     'data-partner-id': '1',
                     'data-eps-search-results-url': '/search',
-                    'data-efed-viewer-url': '/open',
+                    'data-efed-viewer-url': 'https://new.nlrs.ru/open',
                     'data-efed-viewer-url-book-id-placement': 'path',
                     'data-ui-primary-color': '#0f6cbf'
                 },
@@ -41,7 +41,13 @@ class mod_nlrsbook_mod_form extends moodleform_mod {
         $PAGE->requires->js_amd_inline($requirejs);
 
         $PAGE->requires->js_call_amd('mod_nlrsbook/modal_search_handle', 'init');
-
+        ?>
+        <style>
+            .searchPills {
+                display: none !important;
+            }
+        </style>
+        <?php 
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
         $mform->addElement('text', 'nlrsbook_id', 'ID');
